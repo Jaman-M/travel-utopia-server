@@ -30,11 +30,21 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         const bookingOptionCollection = client.db('travelUtopia').collection('bookingOptions');
+        //
+        const bookingsCollection = client.db('travelUtopia').collection('bookings');
         app.get('/bookingOptions', async(req, res) => {
             const query = {};
             const options = await bookingOptionCollection.find(query).toArray(); 
             res.send(options);
             // const cursor = 
+        });
+        // post
+
+        app.post('/bookings', async(req,res) =>{
+            const booking = req.body
+            console.log(booking);
+            const result = await bookingsCollection.insertOne(booking);
+            res.send(result);
         })
     } 
     finally {
