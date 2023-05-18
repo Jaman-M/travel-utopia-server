@@ -36,15 +36,18 @@ async function run() {
         // use aggregate to query multiple cpllection and then merge data
         app.get('/bookingOptions', async(req, res) => {
             const date = req.query.date;
-            console.log(date);
+            // console.log(date);
             const query = {};
             const options = await bookingOptionCollection.find(query).toArray(); 
-            const bookingQuery = {appoinmentDate: date}
-            const alreadyBooked = await bookingOptionCollection.find(bookingQuery).toArray();
+            //get the bookings of the provided date
+            const bookingQuery = {bookingDate: date}
+            const alreadyBooked = await bookingsCollection.find(bookingQuery).toArray();
             options.forEach(option => {
-                const optionBooked = alreadyBooked.filter(book=>book.bookService === option.name);
-                const bookedSlots = optionBooked.map(book => book.slot)
-                console.log(date, option.name, bookedSlots);
+                const optionBooked = alreadyBooked.filter(book => book.bookService === option.name);
+                const bookedSlots = optionBooked.map(book => book.slot);
+                const remainingSlots = option.slots.filter(slot => !bookedSlots.includes(slot));
+                option.slots = remainingSlots;
+                // console.log(date, option.name, remainingSlots.length);
             })
             res.send(options);
             // const cursor = 
@@ -54,6 +57,18 @@ async function run() {
         app.post('/bookings', async(req,res) =>{
             const booking = req.body
             console.log(booking);
+            const query = {
+                bookingDate: booking.bookingDate,
+                email: booking.email,
+                bookingService: booking.bookingService
+            }
+
+            const alreadyBooked = await bookingsCollection.find(query).toArray();
+            if(alreadyBooked.length){
+                const message = `You already have a booking on ${booking.bookingDate}`
+                return res.send({acknowledged: false, message})
+            }
+
             const result = await bookingsCollection.insertOne(booking);
             res.send(result);
         })
