@@ -32,9 +32,20 @@ async function run() {
         const bookingOptionCollection = client.db('travelUtopia').collection('bookingOptions');
         //
         const bookingsCollection = client.db('travelUtopia').collection('bookings');
+
+        // use aggregate to query multiple cpllection and then merge data
         app.get('/bookingOptions', async(req, res) => {
+            const date = req.query.date;
+            console.log(date);
             const query = {};
             const options = await bookingOptionCollection.find(query).toArray(); 
+            const bookingQuery = {appoinmentDate: date}
+            const alreadyBooked = await bookingOptionCollection.find(bookingQuery).toArray();
+            options.forEach(option => {
+                const optionBooked = alreadyBooked.filter(book=>book.bookService === option.name);
+                const bookedSlots = optionBooked.map(book => book.slot)
+                console.log(date, option.name, bookedSlots);
+            })
             res.send(options);
             // const cursor = 
         });
